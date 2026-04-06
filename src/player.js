@@ -196,11 +196,15 @@ export class Player {
 
     // Apply velocity with independent axis collision (AABB)
     
+    let xCollision = false;
+    let zCollision = false;
+
     // X Axis
     this.position.x += this.velocity.x * dt;
     if (this._collides(this.position)) {
       this.position.x -= this.velocity.x * dt;
       this.velocity.x = 0;
+      xCollision = true;
     }
 
     // Z Axis
@@ -208,6 +212,7 @@ export class Player {
     if (this._collides(this.position)) {
       this.position.z -= this.velocity.z * dt;
       this.velocity.z = 0;
+      zCollision = true;
     }
 
     // Y Axis
@@ -223,6 +228,18 @@ export class Player {
         this.position.y -= this.velocity.y * dt;
       }
       this.velocity.y = 0;
+    }
+
+    const horizontalCollision = xCollision || zCollision;
+
+    // Water exit mechanic: Auto-Jump / Step-Up
+    if (this.inWater && horizontalCollision && (this.keys.forward || this.keys.jump)) {
+      // Check if there is free space above the target block to step up into
+      const upPos = this.position.clone();
+      upPos.y += 1.0;
+      if (!this._collides(upPos)) {
+        this.velocity.y = JUMP_FORCE; // Boost to pop out of water
+      }
     }
 
     // Prevent going below world
